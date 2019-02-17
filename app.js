@@ -1,8 +1,8 @@
 /* eslint-disable no-else-return */
 /* eslint linebreak-style: ["error", "windows"] */
-import express from 'express';
-import bodyParser from 'body-parser';
-import router from './routes/index';
+import express from "express";
+import bodyParser from "body-parser";
+import router from "./routes/index";
 
 // Setting up express
 const app = express();
@@ -15,3 +15,5 @@ app.use(router);
 // Start web server
 const port = 5000;
 app.listen(port);
+
+export default app;
