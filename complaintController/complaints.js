@@ -1,120 +1,98 @@
 /* eslint-disable no-else-return */
-/* eslint linebreak-style: ["error", "windows"] */
 /* eslint-disable class-methods-use-this */
-import db from '../db/db';
+import { pool } from '../db/dbconnect';
 
 class ComplaintsController {
   getAllComplaints(req, res) {
-    return res.status(200).send({
-      success: true,
-      message: 'All complaints retrieved succesfully',
-      complaints: db,
-    });
+    const sql = 'Select * from complaints';
+    pool
+      .query(sql)
+      .then(result => {
+        return res.status(200).send(result.rows);
+      })
+      .catch(e => {
+        console.error(e.stack);
+        return res.status(404).send('Query Failed');
+      });
   }
 
   getComplaint(req, res) {
     const id = parseInt(req.params.id, 10);
-    db.map((complaint) => {
-      if (complaint.id === id) {
-        return res.status(200).send({
-          success: true,
-          message: 'Complaint retrieved successfully',
-          complaint,
-        });
-      }
-    });
-    return res.status(404).send({
-      success: false,
-      message: 'Complaint does not exist',
-    });
+    const sql = `Select * from complaints where id = ${id}`;
+    pool
+      .query(sql)
+      .then(result => {
+        if (result.rows.length > 0) {
+          return res.status(200).send(result.rows);
+        } else {
+          return res.status(404).send(`0 rows found`);
+        }
+      })
+      .catch(e => {
+        console.error(e.stack);
+        return res.status(404).send('Query Failed');
+      });
   }
 
   createComplaint(req, res) {
-    if (!req.body.date) {
-      return res.status(400).send({
-        success: false,
-        message: 'Date is required',
+    const data = { date: req.body.date, complaints: req.body.complaints };
+    const sql = `INSERT INTO complaints (date, complaints) VALUES($1,$2) RETURNING *`;
+    const values = [data.date, data.complaints];
+    pool
+      .query(sql, values)
+      .then(result => {
+        if (data.date && data.complaints) {
+          return res.status(202).send({
+            status: 'Succesful',
+            result: result.rows[0]
+          });
+        } else {
+          return res.status(400).send(`Errors in form`);
+        }
+      })
+      .catch(e => {
+        console.error(e.stack);
+        return res.status(404).send('Query Failed');
       });
-    } else if (!req.body.complain) {
-      return res.status(400).send({
-        success: false,
-        message: 'Complaint is required',
-      });
-    }
-    const complaint = {
-      id: db.length + 1,
-      date: req.body.date,
-      complain: req.body.complain,
-    };
-    db.push(complaint);
-    return res.status(201).send({
-      success: true,
-      message: 'Complaint added successfully',
-      complaint,
-    });
   }
 
   updateComplaint(req, res) {
     const id = parseInt(req.params.id, 10);
-    let complaintFound;
-    let itemIndex;
-    db.map((complaint, index) => {
-      if (complaint.id === id) {
-        complaintFound = complaint;
-        itemIndex = index;
-      }
-    });
-
-    if (!complaintFound) {
-      return res.status(404).send({
-        success: false,
-        message: 'Complaint not found',
+    const data = { date: req.body.date, complaints: req.body.complaints };
+    const sql = `UPDATE complaints SET date = $1, complaints = $2 WHERE id = ${id}`;
+    const values = [data.date, data.complaints];
+    pool
+      .query(sql, values)
+      .then(results => {
+        if (!data.date || !data.complaints) {
+          return res.status(404).send({
+            success: false,
+            message: 'You must update all fields'
+          });
+        } else {
+          return res.status(201).send({
+            success: true,
+            data: results.rows[0]
+          });
+        }
+      })
+      .catch(e => {
+        console.error(e.stack);
+        return res.status(404).send('Query Failed');
       });
-    }
-    if (!req.body.date) {
-      return res.status(404).send({
-        success: false,
-        message: 'Date is required',
-      });
-    } else if (!req.body.complain) {
-      return res.status(404).send({
-        success: false,
-        message: 'Complaint is required',
-      });
-    }
-
-    const updatedComplaint = {
-      id: complaintFound.id,
-      date: req.body.date || complaintFound.date,
-      complain: req.body.complain || complaintFound.complain,
-    };
-
-    db.splice(itemIndex, 1, updatedComplaint);
-
-    return res.status(201).send({
-      success: true,
-      message: 'Complaint updated successfully',
-      updatedComplaint,
-    });
   }
 
   deleteComplaint(req, res) {
     const id = parseInt(req.params.id, 10);
-    db.map((complaint, index) => {
-      if (complaint.id === id) {
-        db.splice(index, 1);
-        return res.status(200).send({
-          success: true,
-          message: 'Complaint deleted successfully',
-        });
-      }
-    });
-    return res.status(404).send({
-      success: false,
-      message: 'Complaint not found',
-    });
+    const sql = `Delete from complaints where id = ${id}`;
+    pool
+      .query(sql)
+      .then(() => res.status(200).send(`Row Deleted`))
+      .catch(e => {
+        console.error(e.stack);
+        return res.status(404).send('No rows found');
+      });
   }
 }
-
 const complaintsController = new ComplaintsController();
 export default complaintsController;
