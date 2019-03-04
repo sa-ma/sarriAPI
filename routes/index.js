@@ -5,7 +5,6 @@ import ComplaintsController from '../complaintController/complaints';
 
 const router = express.Router();
 
-
 // endpoint request to get data (get all complaints)
 router.get('/api/v1/sarri', ComplaintsController.getAllComplaints);
 
@@ -19,6 +18,6 @@ router.get('/api/v1/sarri/:id', ComplaintsController.getComplaint);
 router.delete('/api/v1/sarri/:id', ComplaintsController.deleteComplaint);
 
 // endpoint to update data
-router.put('/api/v1/sarri/:id', ComplaintsController.updateComplaint);
+router.patch('/api/v1/sarri/:id', ComplaintsController.updateComplaint);
 
 export default router;

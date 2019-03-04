@@ -58,21 +58,21 @@ class ComplaintsController {
 
   updateComplaint(req, res) {
     const id = parseInt(req.params.id, 10);
-    const data = { date: req.body.date, complaints: req.body.complaints };
-    const sql = `UPDATE complaints SET date = $1, complaints = $2 WHERE id = ${id}`;
-    const values = [data.date, data.complaints];
+    const data = { complaints: req.body.complaints };
+    const sql = `UPDATE complaints SET complaints = $1 WHERE id = ${id}`;
+    const values = [data.complaints];
     pool
       .query(sql, values)
       .then(results => {
-        if (!data.date || !data.complaints) {
+        if (!data.complaints) {
           return res.status(404).send({
             success: false,
-            message: 'You must update all fields'
+            message: 'Update complain'
           });
         } else {
           return res.status(201).send({
             success: true,
-            data: results.rows[0]
+            results: results.rows[0]
           });
         }
       })
